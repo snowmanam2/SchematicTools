@@ -1,4 +1,5 @@
 import nbt.nbt as nbt
+import copy
 
 class Schematic:
 	def __init__(self, filename=None):
@@ -10,6 +11,8 @@ class Schematic:
 			self.size_z = 0
 			self.blocks = bytearray()
 			self.data = bytearray()
+			self.entities = nbt.TAG_List(type=nbt.TAG_Compound)
+			self.tileentities = nbt.TAG_List(type=nbt.TAG_Compound)
 	def load_from_file (self, filename):
 		nbtfile = nbt.NBTFile(filename)
 		
@@ -19,6 +22,12 @@ class Schematic:
 		
 		self.blocks = nbtfile["Blocks"].value
 		self.data = nbtfile["Data"].value
+		self.entities= nbtfile["Entities"]
+		if self.entities == None:
+			self.entities = nbt.TAG_List(type=nbt.TAG_Compound)
+		self.tileentities= nbtfile["TileEntities"]
+		if self.tileentities == None:
+			self.tileentities = nbt.TAG_List(type=nbt.TAG_Compound)
 	def init_sized (self, size_x, size_y, size_z):
 		self.size_x = size_x
 		self.size_y = size_y
@@ -28,6 +37,8 @@ class Schematic:
 
 		self.blocks = bytearray(data_len)
 		self.data = bytearray(data_len)
+		self.entities = nbt.TAG_List(type=nbt.TAG_Compound)
+		self.tileentities = nbt.TAG_List(type=nbt.TAG_Compound)
 
 	def get_offset (self, x, y, z):
 		offset_y = y * self.size_z * self.size_x
@@ -51,7 +62,32 @@ class Schematic:
 				
 				self.blocks[offset+min_x : offset+max_x] = child.blocks[coffset+min_x : coffset+max_x]
 				self.data[offset+min_x : offset+max_x] = child.data[coffset+min_x : coffset+max_x]
-	
+		for entity in child.entities:
+			pos = entity["pos"]
+			ex = pos["x"].value + cx
+			ey = pos["y"].value + cy
+			ez = pos["z"].value + cz
+			
+			if min_x <= ex <= max_x and min_y <= ey <= max_y and min_z <= ez <= max_z:
+				tempent = copy.copy(entity)
+				temppos = tempent["pos"]
+				temppos["x"].value = ex
+				temppos["y"].value = ey
+				temppos["z"].value = ez
+				
+				self.entities.append (tempent)
+		for entity in child.tileentities:
+			ex = entity["x"].value + cx
+			ey = entity["y"].value + cy
+			ez = entity["z"].value + cz
+			
+			if min_x <= ex <= max_x and min_y <= ey <= max_y and min_z <= ez <= max_z:
+				tempent = copy.copy(entity)
+				tempent["x"].value = ex
+				tempent["y"].value = ey
+				tempent["z"].value = ez
+				
+				self.tileentities.append (tempent)
 	def write_to_file (self, filename):
 		nbtfile = nbt.NBTFile()
 		
@@ -64,8 +100,8 @@ class Schematic:
 		nbtfile["Blocks"].value = self.blocks
 		nbtfile["Data"] = nbt.TAG_Byte_Array ()
 		nbtfile["Data"].value = self.data
-		nbtfile["Entities"] = nbt.TAG_List(type=nbt.TAG_Compound)
-		nbtfile["TileEntities"] = nbt.TAG_List(type=nbt.TAG_Compound)
+		nbtfile["Entities"] = self.entities
+		nbtfile["TileEntities"] = self.tileentities
 		
 		nbtfile.write_file (filename)
 
