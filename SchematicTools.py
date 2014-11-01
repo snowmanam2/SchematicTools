@@ -68,8 +68,8 @@ class Schematic:
 			ey = pos["y"].value + cy
 			ez = pos["z"].value + cz
 			
-			if min_x <= ex <= max_x and min_y <= ey <= max_y and min_z <= ez <= max_z:
-				tempent = copy.copy(entity)
+			if 0 <= ex < self.size_x and 0 <= ey < self.size_y and 0 <= ez < self.size_z:
+				tempent = copy.deepcopy(entity)
 				temppos = tempent["pos"]
 				temppos["x"].value = ex
 				temppos["y"].value = ey
@@ -81,8 +81,8 @@ class Schematic:
 			ey = entity["y"].value + cy
 			ez = entity["z"].value + cz
 			
-			if min_x <= ex <= max_x and min_y <= ey <= max_y and min_z <= ez <= max_z:
-				tempent = copy.copy(entity)
+			if 0 <= ex < self.size_x and 0 <= ey < self.size_y and 0 <= ez < self.size_z:
+				tempent = copy.deepcopy(entity)
 				tempent["x"].value = ex
 				tempent["y"].value = ey
 				tempent["z"].value = ez
